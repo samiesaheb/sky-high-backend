@@ -44,18 +44,7 @@ const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
   process.env.CORS_ORIGIN,
-].filter(Boolean);
-
-app.use(helmet({                                                                                                                                               
-    crossOriginResourcePolicy: { policy: 'cross-origin' },                                                                                                       
-  }));                                                                                                                                                           
-                                                                                                                                                                 
-  // CORS configuration - supports multiple origins for Vercel deployments                                                                                       
-  const allowedOrigins = [                                                                                                                                       
-    'http://localhost:5173',                                                                                                                                     
-    'http://localhost:3000',                                                                                                                                     
-    process.env.CORS_ORIGIN,                                                                                                                                     
-  ].filter(Boolean);                                                                                                                                             
+].filter(Boolean);                                                                                                                                            
                                                                                                                                                                  
   app.use(cors({                                                                                                                                                 
     origin: (origin, callback) => {                                                                                                                              
