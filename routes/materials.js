@@ -123,4 +123,26 @@ router.put('/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// Delete material
+router.delete('/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await query(`
+      DELETE FROM materials
+      WHERE material_id = $1
+      RETURNING material_id
+    `, [id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Material not found' });
+    }
+
+    res.json({ message: 'Material deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting material:', error);
+    res.status(500).json({ error: 'Failed to delete material' });
+  }
+});
+
 module.exports = router;
