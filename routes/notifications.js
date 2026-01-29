@@ -212,13 +212,33 @@ router.get('/count', async (req, res) => {
         AND status NOT IN ('Completed', 'Cancelled', 'Abandoned')
     `);
 
+    // Count stale inquiries (Not Started for more than 7 days)
+    const staleCount = await pool.query(`
+      SELECT COUNT(*) as count
+      FROM inquiry_headers
+      WHERE status = 'Not Started'
+        AND inquiry_date < CURRENT_DATE - INTERVAL '7 days'
+    `);
+
+    // Count recently modified inquiries (last 24 hours)
+    const recentCount = await pool.query(`
+      SELECT COUNT(*) as count
+      FROM inquiry_headers
+      WHERE modified_at > NOW() - INTERVAL '24 hours'
+        AND modified_at != created_at
+    `);
+
     const overdue = parseInt(overdueCount.rows[0].count) || 0;
     const dueToday = parseInt(dueTodayCount.rows[0].count) || 0;
+    const stale = parseInt(staleCount.rows[0].count) || 0;
+    const recent_updates = parseInt(recentCount.rows[0].count) || 0;
 
     res.json({
-      total: overdue + dueToday,
+      total: overdue + dueToday + stale + recent_updates,
       overdue,
-      due_today: dueToday
+      due_today: dueToday,
+      stale,
+      recent_updates
     });
 
   } catch (error) {

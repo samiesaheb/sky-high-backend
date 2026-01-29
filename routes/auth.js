@@ -118,4 +118,49 @@ router.post('/change-password', authenticateToken, async (req, res) => {
   }
 });
 
+// Temporary: Seed missing users (admin-only)
+router.post('/seed-users', authenticateToken, async (req, res) => {
+  try {
+    const perms = typeof req.user.permissions === 'string'
+      ? JSON.parse(req.user.permissions)
+      : req.user.permissions;
+    if (!perms || !perms.includes('all')) {
+      return res.status(403).json({ error: 'Admin only' });
+    }
+
+    const saltRounds = 10;
+    const hash = await bcrypt.hash('password123', saltRounds);
+
+    const users = [
+      ['habib', hash, 'Mr. Habib', 'habib@skyhigh.co.th', 'Managing Director', 'Management', '["all"]'],
+      ['kg', hash, 'Kraisar Gilitwala', 'kraisar@gmail.com', 'Admin', 'Administration', '["all"]'],
+      ['shalini', hash, 'Shalini', 'shalini@skyhigh.co.th', 'Operations Manager', 'Operations', '["view_all", "edit_own", "reports"]'],
+      ['lek', hash, 'Lek', 'lek@skyhigh.co.th', 'Procurement Specialist', 'Procurement', '["view_all", "edit_assigned"]'],
+      ['oh', hash, 'Oh+', 'oh@skyhigh.co.th', 'Pricing Specialist', 'R&D', '["view_all", "edit_assigned"]'],
+      ['sharik', hash, 'Sharik', 'sharik@skyhigh.co.th', 'Procurement Specialist', 'Procurement', '["view_all", "edit_assigned"]'],
+      ['donald', hash, 'Donald', 'donald@skyhigh.co.th', 'Design Specialist', 'Design', '["view_all", "edit_assigned"]'],
+      ['tua', hash, 'Tua', 'tua@skyhigh.co.th', 'Logistics Specialist', 'Logistics', '["view_all", "edit_assigned"]'],
+    ];
+
+    const results = [];
+    for (const u of users) {
+      const exists = await query('SELECT user_id FROM users WHERE username = $1', [u[0]]);
+      if (exists.rows.length > 0) {
+        results.push({ username: u[0], status: 'already exists' });
+      } else {
+        await query(
+          'INSERT INTO users (username, password_hash, full_name, email, role, department, permissions, created_by) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)',
+          [...u, 'system']
+        );
+        results.push({ username: u[0], status: 'created' });
+      }
+    }
+
+    res.json({ message: 'Seed complete', results });
+  } catch (error) {
+    console.error('Seed users error:', error);
+    res.status(500).json({ error: 'Failed to seed users' });
+  }
+});
+
 module.exports = router;

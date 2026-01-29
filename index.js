@@ -23,6 +23,10 @@ const countryRoutes = require('./routes/countries');
 const masterRoutes = require('./routes/master');
 const dashboardRoutes = require('./routes/dashboard');
 const attachmentRoutes = require('./routes/attachments');
+const notificationRoutes = require('./routes/notifications');
+
+// Import middleware
+const { authenticateToken } = require('./middleware/auth');
 
 // Import database
 const { pool } = require('./config/db');
@@ -95,6 +99,7 @@ app.use('/api/countries', countryRoutes);
 app.use('/api', masterRoutes); // /api/tasks, /api/categories, etc.
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/attachments', attachmentRoutes);
+app.use('/api/notifications', authenticateToken, notificationRoutes);
 
 // ============================================
 // ERROR HANDLING
